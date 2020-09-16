@@ -1,0 +1,38 @@
+WebRtc
+- 4 sequential steps
+	- Signaling: collects information about media type. Uses part of SDP(Session Description protocol).
+	- Connecting: make ice connection
+	- Securing: Secure the connection made with tls
+	- Communicating: communicate using RTP
+	
+Signaling
+	- Signaling is the initial step of creating a call.
+	- When you create a WebRTC agent it is empty without any endpoints information.
+	- Signaling messages are basically keyvalue pair of text like we have in properties files.The key should always be letters, due to boundation of SDP.
+ 
+		Session Description Protocol
+			- A Session Description then contains an unlimited amount of Media Descriptions.
+			- A Media Description usually maps to a single stream of media. So if you wanted to describe a call with three video streams and two audio tracks you would have five Media Descriptions.
+			- uses key value pair as follows 
+				a=my-sdp-value
+				a=second-value
+			- a media description key always followed by the attributes for that media descriptor
+			- Not all key values defined by the Session Description Protocol are used by WebRTC. The following are the only keys you need to understand.
+				    v - Version, should be equal to ‘0’
+					o - Origin, contains a unique ID useful for renegotiations
+					s - Session Name, should be equal to ‘-’
+					t - Timing, should be equal to ‘0 0’
+					m - Media Description, described in detail below
+					a - Attribute, free text field this is the most common line in WebRTC
+					c - Connection Data, should be equal to ‘IN IP4 0.0.0.0’
+			- example https://webrtcforthecurious.com/docs/02-signaling/#full-example
+			
+				
+		Session Description Protocol and WebRTC 
+			- Offers and Answers: One agent offerer the other agent is answerer. the answerer can reject connection offers based on the media descriptions or codecs.
+			- Transceivers: Transceivers is a WebRTC specific concept that you will see in the API. Each Media Description becomes a Transceiver. Every time you create a Transceiver a new Media Description is added to the local Session Description.
+
+Connecting
+	- peer to peer connection
+	- Need of Dedicated connecting subsystem
+		-difference in network locations, different connecting factors like accepting connections on different ports or following different protocols like UDP and TCP
