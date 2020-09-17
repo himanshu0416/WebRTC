@@ -35,4 +35,83 @@ Signaling
 Connecting
 	- peer to peer connection
 	- Need of Dedicated connecting subsystem
-		-difference in network locations, different connecting factors like accepting connections on different ports or following different protocols like UDP and TCP
+		-difference in network locations, different connecting factors like accepting connections on different ports or following different protocols like UDP and TCP.
+		- pros of using webRTC over traditional connection approaches
+			- Reduced Bandwidth Costs for media communication: due to peer-to-peer connection
+			- Lower Latency : since no server is involved, the communication is between peers directly.
+			- Secure E2E Communication : MITM is a difficult since there is no one in between two peers.
+		- How does it work?
+			- It uses ICE protocol. It overcomes the real world networking constraints
+			- ICE is a protocol that tries to find the best way to communicate between two ICE Agents. Each ICE Agent publishes the ways it is reachable, these are known as candidates. ICE then determines the best pairing of candidates.
+			- Pros of using ICE
+				- takes care of agents in different networks
+				- there are not protocol restrictions
+				- It also handles the firewall/IDS rules
+				- WebRTC uses NAT(Network Address translation) Mapping: 
+					- When you send a packet to an address outside your network, a mapping is created! A NAT Mapping is just a temporary public IP/Port that is allocated by your NAT.
+					- The outbound message will be rewritten to have its source address be the newly created mapping. If a message isn’t sent, it will be automatically routed back to the host inside the NAT.
+					
+					There are three behaviours on which nat mapping could be created
+						- Endpoint-Independent Mapping: 1 mapping per sender in NAT. Same NAT map is used for all the communication.
+						- Address Dependent Mapping: New mapping for each new remote/destination address(ONLY IP Address not PORT)
+						- Address and Port Dependent Mapping: New mapping for each new remote/destination address(Includes PORT)
+					There are three behaviours on which nat mapping filters: 
+						- Endpoint-Independent Filtering: Open for public. Anyone can use that NAT mapping.
+						- Address Dependent Filtering: Only the host(IP Address) created the mapping can use it for communication.
+						- Address and Port Dependent Filtering: Only the host and port for which the mapping was created for can use that mapping.
+					Another concept of Mapping refresh, which states to remove the unused mapping after 5 minutes.
+				- STUN (Session Traversal Utilities for NAT) used by ICE/TURN
+					- It is useful because it allows the programmatic creation of NAT Mappings.
+					- It creates and returns the mapping details for sharing it with others.
+					- Protocol Structure
+					
+						0                   1                   2                   3
+						0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|0 0|     STUN Message Type     |         Message Length        |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                         Magic Cookie                          |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                                                               |
+						|                     Transaction ID (96 bits)                  |
+						|                                                               |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						|                             Data                              |
+						+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+						
+						- STUN Message Type : Binding Request - 0x0001 or Binding Response - 0x0101
+							- To create a NAT Mapping we make a Binding Request. Then the server responds with a Binding Response.
+						- Message Length: This is how long the Data section is
+						- Magic Cookie: The fixed value 0x2112A442 in network byte order, it helps distinguish STUN traffic from other protocols.
+						- Transaction ID: A 96-bit identifier that uniquely identifies a request/response. This helps you pair up your requests and responses
+						- Data: Data will contain a list of STUN attributes.
+							- Structure of STUN data
+								0                   1                   2                   3
+								0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								|         Type                  |            Length             |
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								|                         Value (variable)                ....
+								+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+								
+							- STUN binding requests contains header only
+							- The STUN Binding Response uses a XOR-MAPPED-ADDRESS (0x0020). This attribute contains an IP/Port. This is the IP/Port of the NAT Mapping that is created!
+							
+						- Create a NAT Mapping
+							- Send binding request to STUN SV
+							- receives the binidng response containg the NAT mapping. this NAT mapping is your Public IP or Server Reflexive Candidate.
+						- Determining NAT Type
+							- STUN defines a method for running a test to determine your NAT Type. This would be useful because you would know ahead of time if direct connectivity was possible.
+							
+							
+				- TURN (Traversal Using Relays around NAT) used when direct connectivity isn't possible due to difference in protocols or NAT types are incompatible.
+					- By running all your communication through TURN you obscure the client’s actual address.
+					- TURN uses a dedicated server.
+					- The client connects to a TURN Server and creates an Allocation.
+					- By creating an Allocation a client gets a temporary IP/Port/Protocol that can send into to get traffic back to the client.This new listener is known as the Relayed Transport Address.
+					- For each peer you give the Relay Transport Address to, you must create a Permission to allow communication with you.
+					- When you send outbound traffic via TURN it is sent via the Relayed Transport Address. When a remote peer gets traffic they see it coming from the TURN Server.
+					
+					- TURN Lifecycle
+						- 
+					
